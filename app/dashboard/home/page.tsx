@@ -16,6 +16,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/components/auth-provider'
 
 type EmotionalRecord = {
   id: string
@@ -27,25 +28,19 @@ type EmotionalRecord = {
 }
 
 const EMOTIONS = [
-  'Calmo(a)',
   'Feliz',
-  'Triste',
   'Ansioso(a)',
   'Com raiva',
-  'Animado(a)',
-  'Cansado(a)',
   'Estressado(a)',
+  'Triste',
 ]
 
 const FILTER_EMOTIONS = [
   'Feliz',
-  'Triste',
   'Ansioso(a)',
-  'Calmo(a)',
-  'Com Raiva',
-  'Em Paz',
+  'Com raiva',
   'Estressado(a)',
-  'Esperançoso(a)',
+  'Triste',
 ]
 
 const LOCATIONS = [
@@ -84,7 +79,7 @@ export default function HomePage() {
   })
   
   const [formData, setFormData] = useState({
-    emotion: 'Calmo(a)',
+    emotion: 'Feliz',
     intensity: 3,
     description: '',
     tags: '',
@@ -97,6 +92,7 @@ export default function HomePage() {
 
   const { toast } = useToast()
   const [notificationPermissionGranted, setNotificationPermissionGranted] = useState(false)
+  const { user } = useAuth()
 
   useEffect(() => {
     const stored = localStorage.getItem('emotionalRecords')
@@ -212,7 +208,7 @@ export default function HomePage() {
 
   const resetForm = () => {
     setFormData({
-      emotion: 'Calmo(a)',
+      emotion: 'Feliz',
       intensity: 3,
       description: '',
       tags: '',
@@ -538,7 +534,7 @@ export default function HomePage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="p-2 hover:bg-gray-100 rounded-lg">
-                  <MoreVertical className="w-5 h-5 text-gray-600" />
+                  <Bell className="w-5 h-5 text-gray-600" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

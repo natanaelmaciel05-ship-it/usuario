@@ -1,7 +1,25 @@
-[00:00:01.541] Server  LOG      ✓ Ready in 1036ms
-[00:00:06.275] Server  LOG      ○ Compiling / ...
-[00:00:07.642] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:10.420] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
-[00:00:10.420] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/","route":"/"}
-[00:00:10.421] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","r":"","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763178659733}
-[00:00:10.421] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/dashboard/home color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/home","o":"http://localhost:3000/dashboard/home","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763178659863}
+[00:00:03.454] Server  LOG     
+[00:00:03.455] Server  LOG        We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+[00:00:03.456] Server  LOG        The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+[00:00:03.456] Server  LOG        	- include was updated to add '.next/dev/types/**/*.ts'
+[00:00:03.457] Server  LOG     
+[00:00:03.457] Server  LOG        The following mandatory changes were made to your tsconfig.json:
+
+[00:00:03.458] Server  LOG        	- jsx was set to react-jsx (next.js uses the React automatic runtime)
+[00:00:03.458] Server  LOG     
+[00:00:04.165] Server  LOG      ✓ Ready in 3.6s
+[00:00:29.085] Server  LOG      ○ Compiling / ...
+[00:00:37.785] Server  WARN     ⚠ Cross origin request detected from 192.168.3.11 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[00:00:37.844] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:39.511] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:39.511] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/","route":"/"}
+[00:00:39.511] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/auth/login","route":"/auth/login"}
+[00:00:39.511] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.3.11:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://192.168.3.11:3000/","r":"","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763521073675}
+[00:00:39.511] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.3.11:3000/auth/login color: rgb(120, 120, 120) color: inherit {"dp":"/auth/login","o":"http://192.168.3.11:3000/auth/login","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763521073676}
+[00:01:06.641] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.3.11:3000/dashboard/home color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/home","o":"http://192.168.3.11:3000/dashboard/home","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763521100734}
+[00:01:13.003] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.3.11:3000/dashboard/profile color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/profile","o":"http://192.168.3.11:3000/dashboard/profile","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763521107174}
+[00:01:15.088] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.3.11:3000/dashboard/appointments color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/appointments","o":"http://192.168.3.11:3000/dashboard/appointments","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763521109259}
+[00:01:16.510] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.3.11:3000/dashboard/history color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/history","o":"http://192.168.3.11:3000/dashboard/history","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763521110667}
+[00:01:17.050] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://192.168.3.11:3000/dashboard/appointments color: rgb(120, 120, 120) color: inherit {"dp":"/dashboard/appointments","o":"http://192.168.3.11:3000/dashboard/appointments","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763521111227}

@@ -108,7 +108,7 @@ function AuthProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/components/auth-provider.tsx",
-        lineNumber: 97,
+        lineNumber: 99,
         columnNumber: 5
     }, this);
 }

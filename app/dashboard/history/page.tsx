@@ -19,25 +19,74 @@ interface Appointment {
 
 export default function HistoryPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
+    const exampleAppointments: Appointment[] = [
+      {
+        id: 'ex1',
+        therapistName: 'Dr. Angelica',
+        date: '2025-01-10',
+        time: '10:00',
+        notes: 'Consulta sobre ansiedade no trabalho',
+        status: 'completed'
+      },
+      {
+        id: 'ex2',
+        therapistName: 'Dr. Angelica',
+        date: '2025-01-05',
+        time: '14:00',
+        notes: 'Sessão de acompanhamento',
+        status: 'completed'
+      },
+      {
+        id: 'ex3',
+        therapistName: 'Dr. Angelica',
+        date: '2024-12-28',
+        time: '11:00',
+        notes: 'Precisei remarcar por compromisso',
+        status: 'rescheduled'
+      },
+      {
+        id: 'ex4',
+        therapistName: 'Dr. Angelica',
+        date: '2024-12-20',
+        time: '15:00',
+        notes: 'Cancelada por motivos pessoais',
+        status: 'cancelled'
+      }
+    ]
+
     const saved = localStorage.getItem('appointments')
     if (saved) {
       const allAppointments = JSON.parse(saved)
       const historyAppointments = allAppointments.filter((apt: Appointment) => 
         apt.status === 'completed' || apt.status === 'cancelled' || apt.status === 'rescheduled'
       )
-      setAppointments(historyAppointments)
+      // Combina consultas salvas com exemplos
+      setAppointments([...exampleAppointments, ...historyAppointments])
+    } else {
+      // Se não houver consultas salvas, mostra apenas os exemplos
+      setAppointments(exampleAppointments)
     }
   }, [])
 
 
   const filteredAppointments = appointments.filter(apt => {
-    const matchesSearch = apt.therapistName.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || apt.status === statusFilter
-    return matchesSearch && matchesStatus
+    if (!searchQuery) return true
+    
+    const query = searchQuery.toLowerCase()
+    const statusText = 
+      apt.status === 'completed' ? 'concluída' :
+      apt.status === 'cancelled' ? 'cancelada' :
+      apt.status === 'rescheduled' ? 'remarcada' : 'agendada'
+    
+    return (
+      apt.therapistName.toLowerCase().includes(query) ||
+      statusText.includes(query) ||
+      apt.notes.toLowerCase().includes(query) ||
+      apt.date.includes(query)
+    )
   })
 
   const getStatusBadge = (status: string) => {
@@ -63,35 +112,18 @@ export default function HistoryPage() {
 
         <Card className="p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Filtros</h3>
+            <Search className="w-5 h-5 text-gray-600" />
+            <h3 className="font-semibold text-gray-900">Buscar</h3>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-600 mb-2 block">Buscar</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Nome do profissional..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 mb-2 block">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
-              >
-                <option value="all">Todos os status</option>
-                <option value="completed">Concluída</option>
-                <option value="rescheduled">Remarcada</option>
-                <option value="cancelled">Cancelada</option>
-              </select>
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Buscar por doutor, status (concluída, cancelada, remarcada) ou palavras-chave..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </Card>
 

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import DashboardLayout from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { CalendarIcon, Clock, Plus, Trash2, ChevronLeft, ChevronRight, User, ArrowLeft, CheckCircle2 } from 'lucide-react'
+import { CalendarIcon, Clock, Plus, Trash2, ChevronLeft, ChevronRight, User, ArrowLeft, CheckCircle2, Pencil } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -28,22 +28,27 @@ interface Appointment {
 }
 
 const TIME_SLOTS = [
-  '9:00am',
-  '10:00am',
-  '11:00am',
-  '12:00pm',
-  '1:00pm',
-  '2:00pm',
-  '3:00pm',
-  '4:00pm',
-  '5:00pm'
+  '08:00',
+  '08:45',
+  '09:30',
+  '10:15',
+  '11:00',
+  '11:45',
+  '12:30',
+  '13:15',
+  '14:00',
+  '14:45',
+  '15:30',
+  '16:15',
+  '17:00',
+  '17:45',
 ]
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [showNewAppointment, setShowNewAppointment] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [selectedTimes, setSelectedTimes] = useState<Array<{date: Date, time: string}>>([])
+  const [selectedTime, setSelectedTime] = useState<{date: Date, time: string} | null>(null)
   const [notes, setNotes] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [calendarMonth, setCalendarMonth] = useState(new Date())
@@ -51,6 +56,7 @@ export default function AppointmentsPage() {
   const [showPastDateDialog, setShowPastDateDialog] = useState(false)
   const [pendingAppointment, setPendingAppointment] = useState<Appointment | null>(null)
   const { toast } = useToast()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('appointments')
@@ -81,16 +87,16 @@ export default function AppointmentsPage() {
     
     const dateStr = date.toISOString().split('T')[0]
     const unavailable = [
-      `${dateStr}-12:00pm`,
+      `${dateStr}-12:00`,
     ]
     return !unavailable.includes(`${dateStr}-${time}`)
   }
 
   const getTwoDaysSlots = () => {
     const days = []
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       const date = new Date(selectedDate)
-      date.setDate(date.getDate() + dayOffset + i)
+      date.setDate(date.getDate() + i)
       days.push(date)
     }
     return days
@@ -104,61 +110,47 @@ export default function AppointmentsPage() {
 
   const toggleTimeSelection = (day: Date, time: string) => {
     const dateStr = day.toDateString()
-    const existing = selectedTimes.findIndex(
-      slot => slot.date.toDateString() === dateStr && slot.time === time
-    )
     
-    if (existing !== -1) {
-      setSelectedTimes(selectedTimes.filter((_, i) => i !== existing))
+    if (selectedTime && selectedTime.date.toDateString() === dateStr && selectedTime.time === time) {
+      setSelectedTime(null)
     } else {
-      if (selectedTimes.length < 2) {
-        setSelectedTimes([...selectedTimes, { date: day, time }])
-      } else {
-        toast({
-          title: 'Limite atingido',
-          description: 'Você pode selecionar no máximo 2 horários.',
-          variant: 'destructive'
-        })
-      }
+      setSelectedTime({ date: day, time })
     }
   }
 
   const isTimeSelected = (day: Date, time: string) => {
-    return selectedTimes.some(
-      slot => slot.date.toDateString() === day.toDateString() && slot.time === time
-    )
+    if (!selectedTime) return false
+    return selectedTime.date.toDateString() === day.toDateString() && selectedTime.time === time
   }
 
   const saveAppointment = () => {
-    if (!selectedDate || selectedTimes.length === 0) return
+    if (!selectedDate || !selectedTime) return
     
-    const newAppointments: Appointment[] = selectedTimes.map(slot => ({
+    const newAppointment: Appointment = {
       id: Date.now().toString() + Math.random(),
       therapistName: 'Dr. Angelica',
-      date: slot.date.toISOString().split('T')[0],
-      time: slot.time,
+      date: selectedTime.date.toISOString().split('T')[0],
+      time: selectedTime.time,
       notes: notes,
       status: 'scheduled',
       originalId: editingId || undefined
-    }))
+    }
 
-    const hasPastDate = newAppointments.some(apt => 
-      isDateInPast(apt.date, apt.time)
-    )
+    const hasPastDate = isDateInPast(newAppointment.date, newAppointment.time)
 
     if (hasPastDate) {
-      setPendingAppointment(newAppointments[0])
+      setPendingAppointment(newAppointment)
       setShowPastDateDialog(true)
       return
     }
 
-    saveMultipleAppointments(newAppointments)
+    saveSingleAppointment(newAppointment)
   }
 
-  const saveMultipleAppointments = (newAppointments: Appointment[], completed: boolean = false) => {
-    const finalAppointments = completed 
-      ? newAppointments.map(apt => ({ ...apt, status: 'completed' as const }))
-      : newAppointments
+  const saveSingleAppointment = (newAppointment: Appointment, completed: boolean = false) => {
+    const finalAppointment = completed 
+      ? { ...newAppointment, status: 'completed' as const }
+      : newAppointment
     
     const updated = editingId
       ? [
@@ -167,39 +159,39 @@ export default function AppointmentsPage() {
               ? { ...apt, status: 'rescheduled' as const } 
               : apt
           ),
-          ...finalAppointments
+          finalAppointment
         ]
-      : [...appointments, ...finalAppointments]
+      : [...appointments, finalAppointment]
 
     setAppointments(updated)
     localStorage.setItem('appointments', JSON.stringify(updated))
     
     toast({
       title: completed 
-        ? 'Consultas registradas no histórico' 
+        ? 'Consulta registrada no histórico' 
         : editingId 
         ? 'Consulta remarcada com sucesso' 
-        : `${finalAppointments.length} consulta${finalAppointments.length > 1 ? 's' : ''} agendada${finalAppointments.length > 1 ? 's' : ''} com sucesso`,
+        : 'Consulta agendada com sucesso',
       description: completed 
-        ? `${finalAppointments.length} consulta${finalAppointments.length > 1 ? 's foram marcadas' : ' foi marcada'} como realizada.`
-        : `${finalAppointments.length} horário${finalAppointments.length > 1 ? 's agendados' : ' agendado'}`,
+        ? 'A consulta foi marcada como realizada.'
+        : 'Horário agendado',
     })
     
     resetForm()
   }
 
   const handlePastDateConfirm = (wasCompleted: boolean) => {
-    if (selectedTimes.length > 0) {
-      const newAppointments: Appointment[] = selectedTimes.map(slot => ({
+    if (selectedTime) {
+      const newAppointment: Appointment = {
         id: Date.now().toString() + Math.random(),
         therapistName: 'Dr. Angelica',
-        date: slot.date.toISOString().split('T')[0],
-        time: slot.time,
+        date: selectedTime.date.toISOString().split('T')[0],
+        time: selectedTime.time,
         notes: notes,
         status: 'scheduled',
         originalId: editingId || undefined
-      }))
-      saveMultipleAppointments(newAppointments, wasCompleted)
+      }
+      saveSingleAppointment(newAppointment, wasCompleted)
     }
     setShowPastDateDialog(false)
     setPendingAppointment(null)
@@ -208,7 +200,7 @@ export default function AppointmentsPage() {
   const resetForm = () => {
     setShowNewAppointment(false)
     setSelectedDate(new Date())
-    setSelectedTimes([])
+    setSelectedTime(null)
     setNotes('')
     setEditingId(null)
     setDayOffset(0)
@@ -229,7 +221,7 @@ export default function AppointmentsPage() {
   const startEdit = (apt: Appointment) => {
     setEditingId(apt.id)
     setSelectedDate(new Date(apt.date))
-    setSelectedTimes([{ date: new Date(apt.date), time: apt.time }])
+    setSelectedTime({ date: new Date(apt.date), time: apt.time })
     setNotes(apt.notes)
     setShowNewAppointment(true)
   }
@@ -240,10 +232,22 @@ export default function AppointmentsPage() {
 
   const twoDays = getTwoDaysSlots()
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    // Apenas permite scroll, sem carregar mais dias automaticamente
+  }
+
+  const navigateDays = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      setDayOffset(prev => prev - 7)
+    } else if (direction === 'next') {
+      setDayOffset(prev => prev + 7)
+    }
+  }
+
   if (showNewAppointment) {
     return (
       <DashboardLayout>
-        <div className="max-w-5xl">
+        <div className="max-w-7xl">
           <Button
             variant="ghost"
             onClick={resetForm}
@@ -256,12 +260,9 @@ export default function AppointmentsPage() {
           <Card className="p-8">
             <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                <h1 className="text-2xl font-bold text-gray-900">
                   {editingId ? 'Remarcar Consulta' : 'Agendar Nova Consulta'}
                 </h1>
-                <p className="text-sm text-red-600">
-                  Selecione o horário desejado com Dr. Angelica
-                </p>
               </div>
 
               <div>
@@ -273,27 +274,17 @@ export default function AppointmentsPage() {
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <Label className="text-sm font-medium">
-                    Selecione um horário
-                    {selectedTimes.length > 0 && (
-                      <span className="text-green-600 ml-2">
-                        ({selectedTimes.length}/2 selecionado{selectedTimes.length > 1 ? 's' : ''})
-                      </span>
-                    )}
-                  </Label>
-                  <span className="text-xs text-gray-500">
-                    (GMT-03:00) Horário Padrão de Brasília - São Paulo
-                  </span>
-                </div>
+                <Label className="text-sm font-medium mb-4 block">
+                  Selecione um horário
+                </Label>
                 
-                <div className="grid grid-cols-[300px_1fr] gap-8">
-                  <div>
+                <div className="flex gap-6">
+                  <div className="w-80 flex-shrink-0">
                     <div className="flex items-center justify-between mb-3">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7"
                         onClick={() => {
                           const newMonth = new Date(calendarMonth)
                           newMonth.setMonth(newMonth.getMonth() - 1)
@@ -308,7 +299,7 @@ export default function AppointmentsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7"
                         onClick={() => {
                           const newMonth = new Date(calendarMonth)
                           newMonth.setMonth(newMonth.getMonth() + 1)
@@ -320,7 +311,7 @@ export default function AppointmentsPage() {
                     </div>
                     
                     <div className="border rounded-lg p-3">
-                      <div className="grid grid-cols-7 gap-1 mb-2">
+                      <div className="grid grid-cols-7 gap-1.5 mb-2">
                         {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
                           <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">
                             {day}
@@ -328,7 +319,7 @@ export default function AppointmentsPage() {
                         ))}
                       </div>
                     
-                      <div className="grid grid-cols-7 gap-1">
+                      <div className="grid grid-cols-7 gap-1.5">
                         {(() => {
                           const year = calendarMonth.getFullYear()
                           const month = calendarMonth.getMonth()
@@ -364,7 +355,7 @@ export default function AppointmentsPage() {
                                 }}
                                 disabled={isDisabled}
                                 className={`
-                                  aspect-square flex items-center justify-center text-sm rounded-full
+                                  aspect-square flex items-center justify-center text-xs rounded-full
                                   transition-colors
                                   ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100'}
                                   ${isSelected ? 'bg-green-600 text-white hover:bg-green-700 hover:text-white' : ''}
@@ -382,77 +373,57 @@ export default function AppointmentsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col">
-                    <div className="grid grid-cols-5 gap-3 flex-1">
-                      {twoDays.map((day, dayIndex) => (
-                        <div key={dayIndex} className="flex flex-col min-w-[140px]">
-                          <div className="text-center mb-3 pb-3 border-b">
-                            <div className="text-xs text-gray-500 uppercase mb-1">
-                              {getDayName(day)}
+                  <div className="flex-1 overflow-hidden">
+                    <div 
+                      className="grid grid-cols-7 gap-2 max-h-[420px] overflow-y-auto pr-2"
+                    >
+                      {twoDays.map((day, dayIndex) => {
+                        const isWeekend = day.getDay() === 0 || day.getDay() === 6
+                        return (
+                          <div key={dayIndex} className="flex flex-col min-w-[90px]">
+                            <div className="text-center mb-2 pb-2 border-b sticky top-0 bg-white z-10">
+                              <div className="text-xs text-gray-500 uppercase mb-0.5">
+                                {getDayName(day).slice(0, 3)}.
+                              </div>
+                              <div className={`text-2xl font-bold ${
+                                selectedDate?.toDateString() === day.toDateString()
+                                  ? 'bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto'
+                                  : ''
+                              }`}>
+                                {day.getDate()}
+                              </div>
                             </div>
-                            <div className="text-2xl font-semibold">
-                              {day.getDate()}
+                            <div className="space-y-1.5 flex-1">
+                              {TIME_SLOTS.map((time, timeIndex) => {
+                                const available = isTimeAvailable(day, time)
+                                const isSelected = isTimeSelected(day, time)
+                                
+                                return (
+                                  <Button
+                                    key={timeIndex}
+                                    variant="outline"
+                                    disabled={!available || isWeekend}
+                                    className={`w-full h-9 text-xs font-medium ${
+                                      isSelected
+                                        ? 'bg-green-600 text-white border-green-600 hover:bg-green-700 hover:text-white'
+                                        : available && !isWeekend
+                                        ? 'hover:border-green-600 bg-white'
+                                        : 'opacity-30 bg-gray-50'
+                                    }`}
+                                    onClick={() => {
+                                      if (available && !isWeekend) {
+                                        toggleTimeSelection(day, time)
+                                      }
+                                    }}
+                                  >
+                                    {available && !isWeekend ? time : '—'}
+                                  </Button>
+                                )
+                              })}
                             </div>
                           </div>
-                          <div className="space-y-2 flex-1">
-                            {TIME_SLOTS.map((time, timeIndex) => {
-                              const available = isTimeAvailable(day, time)
-                              const isSelected = isTimeSelected(day, time)
-                              
-                              return (
-                                <Button
-                                  key={timeIndex}
-                                  variant="outline"
-                                  disabled={!available}
-                                  className={`w-full h-11 ${
-                                    isSelected
-                                      ? 'bg-green-600 text-white border-green-600 hover:bg-green-700 hover:text-white'
-                                      : available
-                                      ? 'hover:border-green-600'
-                                      : 'opacity-40'
-                                  }`}
-                                  onClick={() => {
-                                    if (available) {
-                                      toggleTimeSelection(day, time)
-                                    }
-                                  }}
-                                >
-                                  {available ? time : '—'}
-                                </Button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  
-                    <div className="flex items-center gap-4 mt-4 pt-4 border-t">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDayOffset(prev => prev - 5)}
-                        className="shrink-0"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </Button>
-                      <div className="flex-1 relative h-1 bg-gray-200 rounded-full cursor-pointer group">
-                        <div 
-                          className="absolute inset-y-0 left-0 bg-green-600 rounded-full transition-all"
-                          style={{ width: `${Math.min(100, (dayOffset / 30) * 100 + 16)}%` }}
-                        />
-                        <div 
-                          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-green-600 rounded-full shadow-md transition-all group-hover:scale-110"
-                          style={{ left: `calc(${Math.min(100, (dayOffset / 30) * 100 + 16)}% - 8px)` }}
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDayOffset(prev => prev + 5)}
-                        className="shrink-0"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </Button>
+                        )
+                      })}
                     </div>
                   </div>
                 </div>
@@ -473,7 +444,7 @@ export default function AppointmentsPage() {
                 <Button
                   onClick={saveAppointment}
                   className="bg-green-600 hover:bg-green-700 h-12 text-base"
-                  disabled={selectedTimes.length === 0}
+                  disabled={!selectedTime}
                 >
                   Confirmar Agendamento
                 </Button>
@@ -574,12 +545,12 @@ export default function AppointmentsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => startEdit(apt)}
-                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
                       >
-                        Remarcar
+                        <Pencil className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"

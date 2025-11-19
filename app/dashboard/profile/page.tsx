@@ -6,10 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Save, Check } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/components/auth-provider'
 
 export default function ProfilePage() {
+  const { user, login } = useAuth()
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -17,48 +19,41 @@ export default function ProfilePage() {
     birthdate: '',
     accountType: 'patient'
   })
-  const [linkCode, setLinkCode] = useState('')
-  const [isLinked, setIsLinked] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    const user = localStorage.getItem('user')
     if (user) {
-      const userData = JSON.parse(user)
-      setProfile({
-        name: userData.name || '',
-        email: userData.email || '',
-        phone: userData.phone || '',
-        birthdate: userData.birthdate || '',
-        accountType: userData.role || 'patient'
-      })
+      const userDataFromStorage = localStorage.getItem('currentUser')
+      if (userDataFromStorage) {
+        const fullUserData = JSON.parse(userDataFromStorage)
+        setProfile({
+          name: fullUserData.name || '',
+          email: fullUserData.email || '',
+          phone: fullUserData.phone || '',
+          birthdate: fullUserData.birthdate || '',
+          accountType: fullUserData.role || 'patient'
+        })
+      }
     }
-    const psychologistLink = localStorage.getItem('psychologistLink')
-    if (psychologistLink) {
-      setLinkCode(psychologistLink)
-      setIsLinked(true)
-    }
-  }, [])
+  }, [user])
 
   const handleSave = () => {
     const updatedUser = {
-      ...profile,
+      name: profile.name,
+      email: profile.email,
+      phone: profile.phone,
+      birthdate: profile.birthdate,
       role: profile.accountType
     }
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-    alert('Alterações salvas com sucesso!')
-  }
-
-  const handleLink = () => {
-    if (linkCode.trim()) {
-      setIsLinked(true)
-      toast({
-        title: "Vinculação concluída",
-        description: "Você foi vinculado com sucesso ao psicólogo.",
-        duration: 3000,
-      })
-      localStorage.setItem('psychologistLink', linkCode)
-    }
+    
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser))
+    login(updatedUser)
+    
+    toast({
+      title: "Alterações salvas",
+      description: "Suas informações foram atualizadas com sucesso.",
+      duration: 3000,
+    })
   }
 
   return (
@@ -112,57 +107,9 @@ export default function ProfilePage() {
                 onChange={(e) => setProfile({ ...profile, birthdate: e.target.value })}
               />
             </div>
-            <div>
-              <Label htmlFor="accountType">Tipo de Conta</Label>
-              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                <span className="font-medium capitalize">
-                  {profile.accountType === 'patient' ? 'Paciente' : 'Psicólogo'}
-                </span>
-              </div>
-            </div>
             <Button onClick={handleSave} className="w-full bg-green-600 hover:bg-green-700">
               <Save className="w-4 h-4 mr-2" />
               Salvar Alterações
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Vincular ao Psicólogo</CardTitle>
-            <CardDescription>
-              Insira o código fornecido pelo seu psicólogo para estabelecer a vinculação
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="linkCode">Código de Vinculação</Label>
-              <Input
-                id="linkCode"
-                value={linkCode}
-                onChange={(e) => {
-                  setLinkCode(e.target.value)
-                  setIsLinked(false)
-                }}
-                placeholder="DOC-12345"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                O código deve estar no formato DOC-XXXXX
-              </p>
-            </div>
-            <Button 
-              onClick={handleLink}
-              disabled={!linkCode.trim()}
-              className={`w-full transition-colors ${
-                isLinked 
-                  ? 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50' 
-                  : linkCode.trim() 
-                    ? 'bg-green-600 hover:bg-green-700 text-white' 
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {isLinked && <Check className="w-4 h-4 mr-2" />}
-              {isLinked ? 'Vinculado' : 'Vincular'}
             </Button>
           </CardContent>
         </Card>
